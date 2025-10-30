@@ -80,7 +80,7 @@ nav {
   max-width: 100%;
   margin: 40px auto; /* centers nav and adds space around */
   border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* optional: subtle depth */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); 
 }
 
 nav ul {
@@ -215,13 +215,13 @@ footer {
   position: relative;
   margin-bottom: 2rem;
   width: 100%;
-  max-width: 800px; /* optional: control image size */
+  max-width: 800px; 
 }
 
 .img-containerc img {
   width: 100%;
   display: block;
-  border-radius: 8px; /* optional: match overlay corners */
+  border-radius: 8px; 
 }
 
 .overlay-text {
@@ -234,7 +234,7 @@ footer {
   padding: 1.5rem;
   border-radius: 8px;
   text-align: center;
-  width: 30%; /* optional: control overlay width */
+  width: 30%; 
 }
 .overlay-text button {
   margin-top: 1rem;
