@@ -237,13 +237,16 @@ footer {
   width: 30%; 
 }
 .overlay-text button {
-  margin-top: 1rem;
+  margin-top: 2rem;
   padding: 0.5rem 1rem;
   border: none;
-  background: #3498db;
-  color: white;
+  background: #bdc3c7;
+  color: #3498db;
   border-radius: 4px;
   cursor: pointer;
+  font-weight: bolder;
+  font-size: 20px;
+  border: #3498db 2px solid;
 }
 /* RESPONSIVE ONLY */
 @media (max-width: 1100px) {
