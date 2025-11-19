@@ -1,4 +1,4 @@
-const { Pool } = require("pg");
+/*const { Pool } = require("pg");
 require("dotenv").config();
 /* ***************
  * Connection Pool
@@ -6,7 +6,7 @@ require("dotenv").config();
  * But will cause problems in production environment
  * If - else will make determination which to use
  * *************** */
-let pool
+/*let pool
 if (process.env.NODE_ENV == "development") {
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -33,4 +33,20 @@ module.exports = {
     connectionString: process.env.DATABASE_URL,
   })
   module.exports = pool
-}
+}*/
+const { Pool } = require("pg");
+require("dotenv").config();
+
+// Always enable SSL for Render PostgreSQL
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+// Export query wrapper for logging (optional)
+module.exports = {
+  query: (text, params) => pool.query(text, params),
+  pool
+};
