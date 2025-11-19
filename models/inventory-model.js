@@ -53,7 +53,7 @@ module.exports = {
   getInventoryByClassificationId,
   getItemById
   };*/
-  const pool = require("../database");
+  const pool = require("../database/index");
 
 /* ***************************
  *  Get all classification data
