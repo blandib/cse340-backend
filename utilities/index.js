@@ -1,4 +1,3 @@
-
 const invModel = require("../models/inventory-model");
 
 const Util = {};
@@ -34,12 +33,14 @@ Util.buildClassificationGrid = async function(data){
     data.forEach(vehicle => {
   const className = vehicle.classification_name.toLowerCase().replace(/\s+/g, '-'); 
   grid += `<li class="${className}">`;
-  grid += `<a href="../../inv/detail/${vehicle.inv_id}" title="View ${vehicle.inv_make} ${vehicle.inv_model} details">`;
+ grid += `<a href="/inv/itemDetail/${vehicle.inv_id}"title="View ${vehicle.inv_make} ${vehicle.inv_model} details">`;
+
   grid += `<img src="${vehicle.inv_thumbnail}" alt="Image of ${vehicle.inv_make} ${vehicle.inv_model} on CSE Motors" /></a>`;
   grid += '<div class="namePrice">';
   grid += '<hr />';
   grid += '<h2>';
-  grid += `<a href="../../inv/detail/${vehicle.inv_id}" title="View ${vehicle.inv_make} ${vehicle.inv_model} details">${vehicle.inv_make} ${vehicle.inv_model}</a>`;
+  grid += `<a href="/inv/detail/${vehicle.inv_id}" title="View ${vehicle.inv_make} ${vehicle.inv_model} details">`;
+
   grid += '</h2>';
   grid += `<span>$${new Intl.NumberFormat('en-US').format(vehicle.inv_price)}</span>`;
   grid += `<p><strong>Year:</strong> ${vehicle.inv_year}</p>`;

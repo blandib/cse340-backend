@@ -1,46 +1,49 @@
-
 const invModel = require("../models/inventory-model");
 const utilities = require("../utilities/");
 
 const invCont = {};
 
-/* =======================================
- * Build inventory by classification
- * ======================================= */
+/* ***************************
+ * Build inventory by classification safely
+ * ************************** */
 invCont.buildByClassificationId = async function (req, res, next) {
   try {
-    // Validate classificationId
+    // Convert ID to integer
     const classificationId = parseInt(req.params.classificationId);
 
+    // Validate ID
     if (isNaN(classificationId)) {
-      // If invalid like "xyz"
-      let nav = await utilities.getNav();
-      return res.status(404).render("errors/error", {
+      const nav = await utilities.getNav();
+      const grid = '<p class="notice">The classification you requested does not exist.</p>';
+      return res.status(400).render("./inventory/classification", {
         title: "Invalid Classification",
         nav,
-        message: "The classification you are looking for does not exist."
+        grid
       });
     }
 
-    // Get vehicles
+    // Fetch vehicles for this classification
     const data = await invModel.getInventoryByClassificationId(classificationId);
 
+    // Get navigation
+    const nav = await utilities.getNav();
+
+    // Build grid
+    const grid = await utilities.buildClassificationGrid(data);
+
+    // Handle empty results
     if (!data || data.length === 0) {
-      let nav = await utilities.getNav();
-      return res.status(404).render("errors/error", {
-        title: "No Vehicles Found",
+      return res.status(404).render("./inventory/classification", {
+        title: "No vehicles found",
         nav,
-        message: "No vehicles match this classification."
+        grid
       });
     }
 
-    // Build grid safely
-    const grid = await utilities.buildClassificationGrid(data);
+    // Render normally
     const className = data[0].classification_name;
-    let nav = await utilities.getNav();
-
-    return res.render("inventory/classification", {
-      title: className + " Vehicles",
+    res.render("./inventory/classification", {
+      title: `${className} vehicles`,
       nav,
       grid
     });
@@ -50,38 +53,68 @@ invCont.buildByClassificationId = async function (req, res, next) {
   }
 };
 
-/* =======================================
- * Build item detail page
- * ======================================= */
-invCont.getItemDetail = async function(req, res, next) {
+/* ***************************
+ * Build inventory item detail
+ * ************************** */
+/*invCont.getInventoryItem = async function (req, res, next) {
   try {
-    const invId = parseInt(req.params.inventoryId);
+    const itemId = parseInt(req.params.inventoryId);
 
-    if (isNaN(invId)) {
-      return res.status(404).render("errors/error", {
-        message: "Invalid vehicle ID"
+    if (isNaN(itemId)) {
+      const nav = await utilities.getNav();
+      return res.status(400).render('inventory/itemDetail', {
+        title: "Invalid Vehicle",
+        nav,
+        itemHTML: "<p class='notice'>Invalid vehicle ID.</p>"
       });
     }
 
-    const item = await invModel.getItemById(invId);
+    const inventoryItem = await invModel.getItemById(itemId);
 
-    if (!item) {
-      return res.status(404).render("errors/error", {
-        message: "Vehicle not found"
+    if (!inventoryItem) {
+      const nav = await utilities.getNav();
+      return res.status(404).render('inventory/itemDetail', {
+        title: "Vehicle not found",
+        nav,
+        itemHTML: "<p class='notice'>Vehicle not found.</p>"
       });
     }
 
-    let nav = await utilities.getNav();
+    const nav = await utilities.getNav();
+    const itemHTML = utilities.buildItemHTML(inventoryItem);
 
-    return res.render("inventory/itemDetail", {
-      title: `${item.inv_make} ${item.inv_model}`,
+    res.render("inventory/itemDetail", {
+      title: `${inventoryItem.inv_make} ${inventoryItem.inv_model}`,
       nav,
-      item
+      itemHTML
     });
 
   } catch (error) {
     next(error);
   }
+};*/
+invCont.getInventoryItem = async function (req, res, next) {
+  const itemId = parseInt(req.params.inventoryId); // must match route
+  const inventoryItem = await invModel.getItemById(itemId);
+
+  if (!inventoryItem) {
+    const nav = await utilities.getNav();
+    return res.status(404).render("inventory/itemDetail", {
+      title: "Item not found",
+      nav,
+      itemHTML: "<p>Vehicle not found.</p>"
+    });
+  }
+
+  const itemHTML = utilities.buildItemHTML(inventoryItem);
+  const nav = await utilities.getNav();
+
+  res.render("inventory/itemDetail", {
+    title: `${inventoryItem.inv_make} ${inventoryItem.inv_model}`,
+    nav,
+    itemHTML
+  });
 };
+
 
 module.exports = invCont;
