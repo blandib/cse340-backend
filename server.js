@@ -26,6 +26,7 @@ app.set("layout", "./layouts/layout"); // not at views root
 app.use(static);
 //inventory routes
 app.use("/inv", inventoryRoute);
+app.use(express.static("public"));
 
 //app.use("/", (req, res) => {
 //res.render("index", { title: "Home" });
