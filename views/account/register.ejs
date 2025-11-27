@@ -1,0 +1,90 @@
+<h3>Registration</h3>
+
+<!-- DISPLAY GENERAL ERROR LIST -->
+<% if (errors && errors.length > 0) { %>
+  <ul class="notice">
+    <% errors.forEach(error => { %>
+      <li><%= error.msg %></li>
+    <% }) %>
+  </ul>
+<% } %>
+
+<!-- Registration Form -->
+<form action="/account/register" method="post">
+
+  <!-- FIRST NAME -->
+  <label for="accountFirstname">First Name:</label>
+  <input 
+    type="text"
+    name="account_firstname"
+    id="accountFirstname"
+    required
+    value="<%= locals.account_firstname || '' %>"
+  >
+  <% if (errors) {
+       const err = errors.find(e => e.param === 'account_firstname');
+       if (err) { %>
+         <div class="error"><%= err.msg %></div>
+  <% } } %>
+
+  <!-- LAST NAME -->
+  <label for="accountLastname">Last Name:</label>
+  <input 
+    type="text"
+    name="account_lastname"
+    id="accountLastname"
+    required
+    value="<%= locals.account_lastname || '' %>"
+  >
+  <% if (errors) {
+       const err = errors.find(e => e.param === 'account_lastname');
+       if (err) { %>
+         <div class="error"><%= err.msg %></div>
+  <% } } %>
+
+  <!-- EMAIL -->
+  <label for="accountEmail">Email Address:</label>
+  <input 
+    type="email"
+    name="account_email"
+    id="accountEmail"
+    required
+    placeholder="Enter a valid email address"
+    value="<%= locals.account_email || '' %>"
+  >
+  <% if (errors) {
+       const err = errors.find(e => e.param === 'account_email');
+       if (err) { %>
+         <div class="error"><%= err.msg %></div>
+  <% } } %>
+
+  <!-- PASSWORD -->
+  <label for="accountPassword">Password:</label>
+  <input 
+    type="password"
+    name="account_password"
+    id="accountPassword"
+    required
+    placeholder="At least 12 chars, 1 capital, 1 number, 1 special"
+    pattern="^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[^\\w\\s]).{12,}$"
+
+  >
+  <% if (errors) {
+       const err = errors.find(e => e.param === 'account_password');
+       if (err) { %>
+         <div class="error"><%= err.msg %></div>
+  <% } } %>
+
+  <!-- SHOW/HIDE PASSWORD BUTTON -->
+  <button type="button" onclick="togglePassword()">Show/Hide Password</button>
+
+  <!-- SUBMIT -->
+  <button type="submit">Register</button>
+</form>
+
+<script>
+  function togglePassword() {
+    const input = document.getElementById("accountPassword");
+    input.type = input.type === "password" ? "text" : "password";
+  }
+</script>

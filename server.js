@@ -5,6 +5,10 @@
 /* ***********************
 * Require Statements
 *************************/
+const session = require("express-session");
+const pgSession = require("connect-pg-simple")(session)
+
+const pool = require('./database/');
 const express = require("express");
 const expressLayouts = require("express-ejs-layouts");
 const env = require("dotenv").config();
@@ -13,6 +17,56 @@ const static = require("./routes/static");
 const baseController = require("./controllers/baseController");
 const utilities = require("./utilities/");
 const  inventoryRoute = require("./routes/inventoryRoute");
+const flash = require("connect-flash");                   
+const messages = require("express-messages");      
+const accountRoutes = require("./routes/accountRoute");     
+const bodyParser = require("body-parser");
+
+
+/* ***********************
+ * Middleware
+ * ************************
+ app.use(session({
+  store: new (require('connect-pg-simple')(session))({
+    createTableIfMissing: true,
+    pool,
+  }),
+  secret: process.env.SESSION_SECRET,
+  resave: true,
+  saveUninitialized: true,
+  name: 'sessionId',
+}))
+// Express Messages Middleware
+app.use(require('connect-flash')())
+app.use(function(req, res, next){
+  res.locals.messages = require('express-messages')(req, res)
+  next()
+})*/
+/* ***********************
+ * Middleware
+ * ************************/
+app.use(session({
+  store: new pgSession({
+    pool, // your pg.Pool instance
+    createTableIfMissing: true,
+  }),
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  name: "sessionId",
+}));
+
+// Flash + messages middleware
+app.use(flash());
+app.use((req, res, next) => {
+  res.locals.messages = messages(req, res);
+  next();
+});
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
+
+
+
 /* ***********************
 * View Engine and Templates
 *************************/
@@ -27,6 +81,8 @@ app.use(static);
 //inventory routes
 app.use("/inv", inventoryRoute);
 app.use(express.static("public"));
+app.use("/account", accountRoutes);
+
 
 //app.use("/", (req, res) => {
 //res.render("index", { title: "Home" });

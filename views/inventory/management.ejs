@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  
+
+  <main class="management-container">
+    <h1><%= title %></h1>
+
+    <% if (message && message.length) { %>
+      <div class="flash notice"><%= message %></div>
+    <% } %>
+
+    <nav class="actions">
+      <ul>
+        <li><a href="/inv/add-classification">Add New Classification</a></li>
+        <li><a href="/inv/add">Add New Inventory Item</a></li>
+      </ul>
+    </nav>
+  </main>
+</body>
+</html>

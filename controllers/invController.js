@@ -1,120 +1,162 @@
+
 const invModel = require("../models/inventory-model");
 const utilities = require("../utilities/");
 
-const invCont = {};
-
-/* ***************************
- * Build inventory by classification safely
- * ************************** */
-invCont.buildByClassificationId = async function (req, res, next) {
+async function buildByClassificationId(req, res, next) {
   try {
-    // Convert ID to integer
     const classificationId = parseInt(req.params.classificationId);
-
-    // Validate ID
     if (isNaN(classificationId)) {
       const nav = await utilities.getNav();
       const grid = '<p class="notice">The classification you requested does not exist.</p>';
-      return res.status(400).render("./inventory/classification", {
-        title: "Invalid Classification",
-        nav,
-        grid
-      });
+      return res.status(400).render("inventory/classification", { title: "Invalid Classification", nav, grid });
     }
 
-    // Fetch vehicles for this classification
     const data = await invModel.getInventoryByClassificationId(classificationId);
-
-    // Get navigation
     const nav = await utilities.getNav();
-
-    // Build grid
     const grid = await utilities.buildClassificationGrid(data);
 
-    // Handle empty results
     if (!data || data.length === 0) {
-      return res.status(404).render("./inventory/classification", {
-        title: "No vehicles found",
-        nav,
-        grid
-      });
+      return res.status(404).render("inventory/classification", { title: "No vehicles found", nav, grid });
     }
 
-    // Render normally
     const className = data[0].classification_name;
-    res.render("./inventory/classification", {
-      title: `${className} vehicles`,
-      nav,
-      grid
-    });
-
+    res.render("inventory/classification", { title: `${className} vehicles`, nav, grid });
   } catch (error) {
     next(error);
   }
-};
+}
 
-/* ***************************
- * Build inventory item detail
- * ************************** */
-/*invCont.getInventoryItem = async function (req, res, next) {
-  try {
-    const itemId = parseInt(req.params.inventoryId);
-
-    if (isNaN(itemId)) {
-      const nav = await utilities.getNav();
-      return res.status(400).render('inventory/itemDetail', {
-        title: "Invalid Vehicle",
-        nav,
-        itemHTML: "<p class='notice'>Invalid vehicle ID.</p>"
-      });
-    }
-
-    const inventoryItem = await invModel.getItemById(itemId);
-
-    if (!inventoryItem) {
-      const nav = await utilities.getNav();
-      return res.status(404).render('inventory/itemDetail', {
-        title: "Vehicle not found",
-        nav,
-        itemHTML: "<p class='notice'>Vehicle not found.</p>"
-      });
-    }
-
-    const nav = await utilities.getNav();
-    const itemHTML = utilities.buildItemHTML(inventoryItem);
-
-    res.render("inventory/itemDetail", {
-      title: `${inventoryItem.inv_make} ${inventoryItem.inv_model}`,
-      nav,
-      itemHTML
-    });
-
-  } catch (error) {
-    next(error);
-  }
-};*/
-invCont.getInventoryItem = async function (req, res, next) {
-  const itemId = parseInt(req.params.inventoryId); // must match route
+async function getInventoryItem(req, res, next) {
+  const itemId = parseInt(req.params.inventoryId);
   const inventoryItem = await invModel.getItemById(itemId);
 
   if (!inventoryItem) {
     const nav = await utilities.getNav();
-    return res.status(404).render("inventory/itemDetail", {
-      title: "Item not found",
-      nav,
-      itemHTML: "<p>Vehicle not found.</p>"
-    });
+    return res.status(404).render("inventory/itemDetail", { title: "Item not found", nav, itemHTML: "<p>Vehicle not found.</p>" });
   }
 
   const itemHTML = utilities.buildItemHTML(inventoryItem);
   const nav = await utilities.getNav();
 
-  res.render("inventory/itemDetail", {
-    title: `${inventoryItem.inv_make} ${inventoryItem.inv_model}`,
+  res.render("inventory/itemDetail", { title: `${inventoryItem.inv_make} ${inventoryItem.inv_model}`, nav, itemHTML });
+}
+
+async function buildManagement(req, res) {
+  const nav = await utilities.getNav();
+  res.render("inventory/management", { title: "Inventory Management", nav, message: req.flash("notice") });
+}
+
+async function buildAddClassification(req, res) {
+  const nav = await utilities.getNav();
+  const flashArr = req.flash("notice") || [];
+  const message = Array.isArray(flashArr) ? flashArr.join(" ") : flashArr || null;
+
+  res.render("inventory/add-classification", {
+    title: "Add Classification",
     nav,
-    itemHTML
+    errors: null,
+    message,
+    classification_name: ""
   });
+}
+
+async function createClassification(req, res) {
+  const nav = await utilities.getNav();
+  const { classification_name } = req.body;
+
+  try {
+    const result = await invModel.insertClassification(classification_name);
+    if (result && (result.rowCount > 0 || result.rows)) {
+      req.flash("notice", "Classification created successfully.");
+      return res.redirect("/inv/");
+    } else {
+      req.flash("notice", "Classification creation failed.");
+      const flashArr = req.flash("notice") || [];
+      const message = Array.isArray(flashArr) ? flashArr.join(" ") : flashArr || null;
+      return res.status(500).render("inventory/add-classification", { title: "Add Classification", nav, errors: null, message, classification_name });
+    }
+  } catch (err) {
+    console.error("createClassification error:", err);
+    req.flash("notice", "An error occurred while creating classification.");
+    const flashArr = req.flash("notice") || [];
+    const message = Array.isArray(flashArr) ? flashArr.join(" ") : flashArr || null;
+    return res.status(500).render("inventory/add-classification", { title: "Add Classification", nav, errors: null, message, classification_name });
+  }
+}
+
+async function buildAddInventory(req, res) {
+  const nav = await utilities.getNav();
+
+  // Get classifications from DB
+  const classificationsData = await invModel.getClassifications();
+
+  // Pass the rows array to utilities
+  const classificationList = await utilities.buildClassificationList(classificationsData.rows);
+
+ res.render("inventory/add-inventory", {
+  title: "Add Inventory Item",
+  nav,
+  errors: null,
+  message: req.flash("notice"),
+  classificationList,
+  inv_make: "",
+  inv_model: "",
+  inv_year: "",
+  inv_price: "",
+  inv_miles: "",
+  inv_color: "",
+  inv_image: "/images/vehicles/no-image.png",
+  inv_thumbnail: "/images/vehicles/no-image-tn.png",
+  classification_id: "",
+  inv_description: ""  // <--- add this
+});
+}
+async function createInventory(req, res) {
+  const nav = await utilities.getNav();
+  const {
+    inv_make, inv_model, inv_year, inv_price,
+    inv_miles, inv_color, inv_image, inv_thumbnail, classification_id, inv_description
+  } = req.body;
+
+  try {
+    const success = await invModel.insertInventory({
+      inv_make, 
+      inv_model,
+      inv_year: parseInt(inv_year),
+      inv_price: parseFloat(inv_price),
+      inv_miles: parseInt(inv_miles),
+      inv_color,
+      inv_image: inv_image || "/images/vehicles/no-image.png",
+      inv_thumbnail: inv_thumbnail || "/images/vehicles/no-image-tn.png",
+      classification_id: parseInt(classification_id),
+      inv_description: inv_description || "No description provided"
+    });
+
+    if (success) {
+      req.flash("notice", "Inventory item created successfully.");
+      return res.redirect("/inv/");
+    }
+  } catch (err) {
+    console.error("createInventory error:", err);
+    req.flash("notice", "An error occurred while creating inventory item.");
+    const classificationList = await utilities.buildClassificationList(parseInt(classification_id));
+    return res.status(500).render("inventory/add-inventory", {
+      title: "Add Inventory Item",
+      nav,
+      errors: null,
+      message: req.flash("notice"),
+      classificationList,
+      inv_make, inv_model, inv_year, inv_price, inv_miles, inv_color, inv_image, inv_thumbnail, classification_id
+    });
+  }
+}
+
+module.exports = {
+  buildByClassificationId,
+  getInventoryItem,
+  buildManagement,
+  buildAddClassification,
+  createClassification,
+  buildAddInventory,
+  createInventory
 };
-
-
-module.exports = invCont;
