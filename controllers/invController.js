@@ -150,6 +150,36 @@ async function createInventory(req, res) {
     });
   }
 }
+/* ***************************
+ *  Build vehicle detail page
+ * ************************** */
+async function buildById(req, res) {
+  const nav = await utilities.getNav();
+  const inv_id = parseInt(req.params.inv_id);
+
+  try {
+    const itemData = await invModel.getInventoryById(inv_id);
+
+    if (!itemData.rows.length) {
+      req.flash("notice", "Vehicle not found");
+      return res.redirect("/inv");
+    }
+
+    const vehicle = itemData.rows[0];
+
+    res.render("inventory/detail", {
+      title: `${vehicle.inv_year} ${vehicle.inv_make} ${vehicle.inv_model}`,
+      nav,
+      vehicle,
+      message: req.flash("notice")
+    });
+
+  } catch (error) {
+    console.error("buildById error:", error);
+    req.flash("notice", "Error loading vehicle details.");
+    res.redirect("/inv");
+  }
+}
 
 module.exports = {
   buildByClassificationId,
@@ -158,5 +188,6 @@ module.exports = {
   buildAddClassification,
   createClassification,
   buildAddInventory,
-  createInventory
+  createInventory,
+  buildById
 };

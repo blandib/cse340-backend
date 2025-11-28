@@ -49,7 +49,8 @@ router.post("/add",
   invValidate.checkInventoryData,
   utilities.handleErrors(invController.createInventory)
 );
-
+// View vehicle detail page
+router.get("/detail/:inv_id", invController.buildById);
 
 
 
