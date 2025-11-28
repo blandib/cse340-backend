@@ -67,6 +67,7 @@ async function insertClassification(classification_name) {
  *  Insert a new inventory item
  * ************************** */
 async function insertInventory({
+  nav,
   inv_make,
   inv_model,
   inv_year,
@@ -87,6 +88,7 @@ async function insertInventory({
       RETURNING *
     `;
     const result = await pool.query(sql, [
+      nav,
       inv_make,
       inv_model,
       inv_year,

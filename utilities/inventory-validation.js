@@ -77,7 +77,7 @@ async function checkInventoryData(req, res, next) {
     req.flash("notice", "Please correct the errors and try again.");
     return res.render("inventory/add-inventory", {
       title: "Add Inventory Item",
-      nav,
+      //nav,
       errors,
       message: req.flash("notice"),
       classificationList,

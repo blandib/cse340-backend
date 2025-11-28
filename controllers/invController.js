@@ -84,52 +84,86 @@ async function createClassification(req, res) {
   }
 }
 
+// Build Add Inventory Form
 async function buildAddInventory(req, res) {
   const nav = await utilities.getNav();
 
   // Get classifications from DB
   const classificationsData = await invModel.getClassifications();
-
-  // Pass the rows array to utilities
   const classificationList = await utilities.buildClassificationList(classificationsData.rows);
 
- res.render("inventory/add-inventory", {
-  title: "Add Inventory Item",
-  nav,
-  errors: null,
-  message: req.flash("notice"),
-  classificationList,
-  inv_make: "",
-  inv_model: "",
-  inv_year: "",
-  inv_price: "",
-  inv_miles: "",
-  inv_color: "",
-  inv_image: "/images/vehicles/no-image.png",
-  inv_thumbnail: "/images/vehicles/no-image-tn.png",
-  classification_id: "",
-  inv_description: ""  // <--- add this
-});
+  res.render("inventory/add-inventory", {
+    title: "Add Inventory Item",
+    nav,
+    errors: null,
+    message: req.flash("notice"),
+    classificationList,
+    inv_make: "",
+    inv_model: "",
+    inv_year: "",
+    inv_price: "",
+    inv_miles: "",
+    inv_color: "",
+    inv_image: "/images/vehicles/no-image.png",
+    inv_thumbnail: "/images/vehicles/no-image-tn.png",
+    classification_id: "",
+    inv_description: ""
+  });
 }
+
+// Create Inventory Item with Server-side Validation
 async function createInventory(req, res) {
   const nav = await utilities.getNav();
-  const {
-    inv_make, inv_model, inv_year, inv_price,
-    inv_miles, inv_color, inv_image, inv_thumbnail, classification_id, inv_description
-  } = req.body;
 
+  // Validation rules
+  await body("inv_make").trim().isLength({ min: 2 }).withMessage("Make must be at least 2 characters.").run(req);
+  await body("inv_model").trim().isLength({ min: 2 }).withMessage("Model must be at least 2 characters.").run(req);
+  await body("inv_year").isInt({ min: 1900, max: 2099 }).withMessage("Enter a valid year.").run(req);
+  await body("inv_price").isFloat({ min: 0 }).withMessage("Price must be positive.").run(req);
+  await body("inv_miles").isInt({ min: 0 }).withMessage("Miles must be non-negative.").run(req);
+  await body("inv_color").trim().isLength({ min: 3 }).withMessage("Color must be at least 3 characters.").run(req);
+  await body("inv_image").trim().notEmpty().withMessage("Provide an image path.").run(req);
+  await body("inv_thumbnail").trim().notEmpty().withMessage("Provide a thumbnail path.").run(req);
+  await body("classification_id").isInt({ min: 1 }).withMessage("Please select a classification.").run(req);
+  await body("inv_description").trim().isLength({ min: 5 }).withMessage("Description must be at least 5 characters.").run(req);
+
+  const errors = validationResult(req);
+  const classificationList = await utilities.buildClassificationList(req.body.classification_id || null);
+
+  if (!errors.isEmpty()) {
+    req.flash("notice", "Please correct the errors and try again.");
+    return res.status(400).render("inventory/add-inventory", {
+      title: "Add Inventory Item",
+      nav,
+      errors,
+      message: req.flash("notice"),
+      classificationList,
+      inv_make: req.body.inv_make,
+      inv_model: req.body.inv_model,
+      inv_year: req.body.inv_year,
+      inv_price: req.body.inv_price,
+      inv_miles: req.body.inv_miles,
+      inv_color: req.body.inv_color,
+      inv_image: req.body.inv_image,
+      inv_thumbnail: req.body.inv_thumbnail,
+      classification_id: req.body.classification_id,
+      inv_description: req.body.inv_description
+    });
+  }
+
+  // Insert into DB
   try {
     const success = await invModel.insertInventory({
-      inv_make, 
-      inv_model,
-      inv_year: parseInt(inv_year),
-      inv_price: parseFloat(inv_price),
-      inv_miles: parseInt(inv_miles),
-      inv_color,
-      inv_image: inv_image || "/images/vehicles/no-image.png",
-      inv_thumbnail: inv_thumbnail || "/images/vehicles/no-image-tn.png",
-      classification_id: parseInt(classification_id),
-      inv_description: inv_description || "No description provided"
+      inv_make: req.body.inv_make,
+      inv_model: req.body.inv_model,
+      inv_year: parseInt(req.body.inv_year),
+      inv_price: parseFloat(req.body.inv_price),
+      inv_miles: parseInt(req.body.inv_miles),
+      inv_color: req.body.inv_color,
+      inv_image: req.body.inv_image || "/images/vehicles/no-image.png",
+      inv_thumbnail: req.body.inv_thumbnail || "/images/vehicles/no-image-tn.png",
+      classification_id: parseInt(req.body.classification_id),
+      inv_description: req.body.inv_description
     });
 
     if (success) {
@@ -139,14 +173,22 @@ async function createInventory(req, res) {
   } catch (err) {
     console.error("createInventory error:", err);
     req.flash("notice", "An error occurred while creating inventory item.");
-    const classificationList = await utilities.buildClassificationList(parseInt(classification_id));
     return res.status(500).render("inventory/add-inventory", {
       title: "Add Inventory Item",
       nav,
       errors: null,
       message: req.flash("notice"),
       classificationList,
-      inv_make, inv_model, inv_year, inv_price, inv_miles, inv_color, inv_image, inv_thumbnail, classification_id
+      inv_make: req.body.inv_make,
+      inv_model: req.body.inv_model,
+      inv_year: req.body.inv_year,
+      inv_price: req.body.inv_price,
+      inv_miles: req.body.inv_miles,
+      inv_color: req.body.inv_color,
+      inv_image: req.body.inv_image,
+      inv_thumbnail: req.body.inv_thumbnail,
+      classification_id: req.body.classification_id,
+      inv_description: req.body.inv_description
     });
   }
 }
