@@ -88,6 +88,7 @@ Util.checkAccountOwnership = (req, res, next) => {
   next();
 };
 
+
 /****************************************
  * Middleware: Check admin authorization
  ****************************************/
@@ -169,9 +170,53 @@ async function buildClassificationList(selectedId = null) {
   return classificationList;
 }
 
+/* ****************************************
+* Middleware to check token validity
+**************************************** */
+Util.checkJWTToken = (req, res, next) => {
+ if (req.cookies.jwt) {
+  jwt.verify(
+   req.cookies.jwt,
+   process.env.ACCESS_TOKEN_SECRET,
+   function (err, accountData) {
+    if (err) {
+     req.flash("Please log in")
+     res.clearCookie("jwt")
+     return res.redirect("/account/login")
+    }
+    res.locals.accountData = accountData
+    res.locals.loggedin = 1
+    next()
+   })
+ } else {
+  next()
+ }
+}
+
+/* ****************************************
+ *  Check Login
+ * ************************************ */
+Util.checkLogin = (req, res, next) => {
+  if (res.locals.loggedin) {
+    next(); // user is logged in, continue
+  } else {
+    req.flash("notice", "Please log in."); // show flash message
+    return res.redirect("/account/login"); // redirect to login
+  }
+};
 
 
-
+/*module.exports = {
+  getNav: Util.getNav,
+  buildClassificationGrid: Util.buildClassificationGrid,
+  buildItemHTML,
+  handleErrors: Util.handleErrors,
+  checkLogin: Util.checkLogin,
+  checkAccountOwnership: Util.checkAccountOwnership,
+  checkAdminAuth: Util.checkAdminAuth,
+  buildClassificationList,
+  Util,
+};*/
 module.exports = {
   getNav: Util.getNav,
   buildClassificationGrid: Util.buildClassificationGrid,
@@ -181,4 +226,6 @@ module.exports = {
   checkAccountOwnership: Util.checkAccountOwnership,
   checkAdminAuth: Util.checkAdminAuth,
   buildClassificationList,
+  checkJWTToken: Util.checkJWTToken,   // ✅ ADD THIS
 };
+

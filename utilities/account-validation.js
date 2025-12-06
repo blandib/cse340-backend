@@ -205,7 +205,25 @@ validate.checkPasswordChangeData = async (req, res, next) => {
   }
   next();
 };
-
+/* ****************************************
+ *  Middleware: Require Employee or Admin Role
+ * **************************************** */
+validate.requireEmployeeOrAdmin = function(req, res, next) {
+  // Check if user is authenticated
+  if (!res.locals.loggedin) {
+    return res.redirect("/account/login");
+  }
+  
+  // Check if user has Employee or Admin role
+  const accountType = res.locals.accountData?.account_type;
+  
+  if (accountType !== "Employee" && accountType !== "Admin") {
+    req.flash("notice", "Access denied. Employee or Admin privileges required.");
+    return res.redirect("/account/");
+  }
+  
+  next();
+};
 
 
 module.exports = validate;

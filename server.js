@@ -21,8 +21,9 @@ const flash = require("connect-flash");
 const messages = require("express-messages");      
 const accountRoutes = require("./routes/accountRoute");     
 const bodyParser = require("body-parser");
-
-
+const cookieParser = require("cookie-parser");
+//const cookieParser = require("cookie-parser");
+//const jwt = require("jsonwebtoken");
 /* ***********************
  * Middleware
  * ************************
@@ -64,7 +65,35 @@ app.use((req, res, next) => {
 });
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
+app.use(cookieParser());
+app.use(utilities.checkJWTToken)
 
+//app.use("/inv", inventoryRoute);
+
+// middleware to make auth info available to views (res.locals)
+app.use((req, res, next) => {
+  res.locals.loggedIn = false;
+  res.locals.account = null;
+
+  const token = req.cookies?.jwt;
+  if (!token) return next();
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    // stash useful info on res.locals
+    res.locals.loggedIn = true;
+    res.locals.account = {
+      id: payload.account_id,
+      firstname: payload.account_firstname,
+      lastname: payload.account_lastname,
+      email: payload.account_email,
+      accountType: payload.account_type,
+    };
+  } catch (err) {
+    // invalid token: ignore (user treated as logged out)
+  }
+  next();
+})
 
 
 /* ***********************
@@ -80,7 +109,9 @@ app.set("layout", "./layouts/layout"); // not at views root
 app.use(static);
 //inventory routes
 app.use("/inv", inventoryRoute);
-app.use(express.static("public"));
+//app.use(express.static("public"));
+const path = require("path")
+app.use(express.static(path.join(__dirname, "public")))
 app.use("/account", accountRoutes);
 
 

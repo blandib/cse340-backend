@@ -1,27 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title %></title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <title><%= title %> | CSE Motors</title>
 </head>
 <body>
-  
+  <%- messages() %>
 
-  <main class="management-container">
-    <h1><%= title %></h1>
+  <% if (locals.accountData) { %>
+      <!-- Conditional Greeting -->
+      <h1>Welcome <%= locals.accountData.account_firstname %></h1>
 
-    <% if (message && message.length) { %>
-      <div class="flash notice"><%= message %></div>
-    <% } %>
+      <!-- Update Account Information Link (for all logged-in users) -->
+      <p><a href="/account/update/<%= locals.accountData.account_id %>" title="Update Account Information">Update Account Information</a></p>
 
-    <nav class="actions">
-      <ul>
-        <li><a href="/inv/add-classification">Add New Classification</a></li>
-        <li><a href="/inv/add">Add New Inventory Item</a></li>
-      </ul>
-    </nav>
-  </main>
+      <% if (locals.accountData.account_type === "Employee" || locals.accountData.account_type === "Admin") { %>
+          <!-- Inventory Management section (only for Employee/Admin) -->
+          <h3>Inventory Management</h3>
+          <p>Use the links below to manage inventory classifications and vehicles.</p>
+          <div class="card">
+            <ul>
+                <li><a href="/inv/add-classification">➕ Add New Classification</a></li>
+                <li><a href="/inv/add-inventory">🚗 Add New Vehicle</a></li>
+            </ul>
+          </div>
+
+          <!-- Existing "Manage Inventory" section for selecting classifications, only for Employee/Admin -->
+          <h2>Manage Inventory</h2>
+          <p>Choose a classification to see those inventory items.</p>
+          <%- classificationSelect %>
+
+          <table id="inventoryDisplay"></table>
+
+      <% } %>
+  <% } else { %>
+      <h1><%= title %></h1>
+      <p>Please log in to manage your account.</p>
+  <% } %>
+
+  <noscript>JavaScript must be enabled to use this page.</noscript>
+  <script src="../../js/inventory.js"></script>
+
 </body>
 </html>

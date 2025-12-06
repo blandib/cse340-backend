@@ -45,9 +45,10 @@
          value="<%= inv_thumbnail || '/images/vehicles/no-image-tn.png' %>">
 
   <label for="inv_description">Description</label>
-<textarea id="inv_description" name="inv_description" required minlength="5" maxlength="500" rows="4">
-  <%= inv_description || '' %>
-</textarea>
+<textarea id="inv_description" name="inv_description" required minlength="5" maxlength="500" rows="4"><%= inv_description || '' %></textarea>
+
+
+
 
 
   <label for="classificationList">Classification</label>
